@@ -1,0 +1,25 @@
+Estructura del proyecto sugerida por IA Gemini
+
+PROYECTO-EMBEBIDOS/
+├── docker-compose.yml         # Levanta la DB y la API automáticamente
+├── .gitignore                 # Para no subir la carpeta venv ni los .env
+│
+├── server/                    # Todo lo que vive en el Servidor Central
+│   ├── main.py                # App de FastAPI
+│   ├── init_database.sql      # Script con tablas para la DB
+│   ├── database.py            # Conexión a PostgreSQL y lógica de pgvector
+│   ├── schemas.py             # Modelos de datos (Pydantic)
+│   ├── requirements.txt       # Dependencias del servidor (fastapi, psycopg2, face_recognition)
+│   └── Dockerfile             # Instrucciones para el contenedor del servidor
+│
+├── edge_node/                 # Todo lo que vive en la Raspberry Pi
+│   ├── capture.py             # Script de OpenCV y envío de fotos
+│   ├── requirements.txt       # Dependencias de la Pi (opencv-python, requests)
+│   └── config.py              # IPs y configuración de la cámara
+│
+├── data/                      # Almacenamiento persistente
+│   ├── db_data/               # Datos de Postgres (ignorado por Git)
+│   └── known_faces/           # Fotos para el "enrolamiento" inicial
+│
+└── notebooks/                 # (Opcional) Para tus pruebas en Google Colab
+    └── pruebas_modelo.ipynb
