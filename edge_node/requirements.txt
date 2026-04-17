@@ -1,0 +1,6 @@
+cmake
+opencv-python<4.10
+dlib-bin
+numpy<2
+psycopg2-binary
+requests
