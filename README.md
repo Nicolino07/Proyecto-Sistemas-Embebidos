@@ -54,16 +54,28 @@ Las siguientes veces que lo corras, solo levanta el contenedor sin re-crear nada
 
 ## Correr el sistema
 
-### Terminal 1 — Servidor (PC)
+### Linux
+**Terminal 1 — Servidor:**
 ```bash
 bash start.sh
 ```
-La primera vez instala las dependencias automáticamente. La API queda en http://localhost:8000/docs
-
-### Terminal 2 — Cámara (Raspberry o PC para desarrollo)
+**Terminal 2 — Cámara:**
 ```bash
 bash camara.sh
 ```
+
+### Windows
+Requisitos previos (instalar una sola vez):
+- [Python 3.11](https://www.python.org/downloads/) — tildar "Add to PATH" durante la instalación
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+
+**Terminal 1 — Servidor:** doble clic en `start.bat`
+
+**Terminal 2 — Cámara:** doble clic en `camara.bat`
+
+La primera vez instala todas las dependencias automáticamente.
+
+La API queda en http://localhost:8000/docs
 
 ---
 
