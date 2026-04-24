@@ -6,18 +6,20 @@
 # ==============================================================================
 import psycopg2
 import numpy as np
+import os
+from dotenv import load_dotenv
 
-# ==============================================================================
-# CONFIGURACION DE LA BASE DE DATOS
-# Estos datos tienen que coincidir con lo que pusiste en docker-compose.yml.
-# En un proyecto real esto iría en un archivo .env para no hardcodear contraseñas.
-# ==============================================================================
+# Carga las variables del archivo .env (DB_HOST, DB_PORT, etc.)
+# Cuando corre dentro de Docker, las variables vienen del docker-compose.yml
+# Cuando corre localmente, las lee del archivo .env
+load_dotenv()
+
 DB_CONFIG = {
     "dbname": "facial_recognition",
     "user": "admin",
     "password": "admin123",
-    "host": "db",
-    "port": 5432,
+    "host": os.getenv("DB_HOST", "localhost"),
+    "port": int(os.getenv("DB_PORT", "5435")),
 }
 
 

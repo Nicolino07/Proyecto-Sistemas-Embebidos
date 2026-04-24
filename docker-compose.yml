@@ -17,6 +17,9 @@ services:
       context: .
       dockerfile: server/Dockerfile
     container_name: facial_api
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
     ports:
       - "8001:8000"
     depends_on:
