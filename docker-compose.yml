@@ -7,10 +7,20 @@ services:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin123
     ports:
-      - "5434:5432"
+      - "5435:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./server/init_database.sql:/docker-entrypoint-initdb.d/init.sql
+
+  api:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: facial_api
+    ports:
+      - "8001:8000"
+    depends_on:
+      - db
 
 volumes:
   db_data:

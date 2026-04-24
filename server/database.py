@@ -16,8 +16,8 @@ DB_CONFIG = {
     "dbname": "facial_recognition",
     "user": "admin",
     "password": "admin123",
-    "host": "localhost",
-    "port": 5434,
+    "host": "db",
+    "port": 5432,
 }
 
 
@@ -25,9 +25,9 @@ def get_connection():
     return psycopg2.connect(**DB_CONFIG)
 
 
-def guardar_usuario(nombre, apellido, encoding_vector):
+def guardar_usuario(documento, nombre, apellido, encoding_vector):
     """
-    Busca si el usuario ya existe por nombre+apellido.
+    Busca si el usuario ya existe por documento.
     Si existe, agrega un nuevo vector a su registro.
     Si no existe, crea el usuario y agrega el vector.
     Devuelve el id_usuario.
@@ -35,26 +35,21 @@ def guardar_usuario(nombre, apellido, encoding_vector):
     vector_lista = encoding_vector.tolist()
     with get_connection() as conn:
         with conn.cursor() as cur:
-            # Buscar si el usuario ya existe
             cur.execute(
-                "SELECT id_usuario FROM usuario WHERE nombre = %s AND apellido = %s",
-                (nombre, apellido),
+                "SELECT id_usuario FROM usuario WHERE documento = %s",
+                (documento,),
             )
             row = cur.fetchone()
 
             if row:
-                # Ya existe — solo agregamos el nuevo vector
                 id_usuario = row[0]
             else:
-                # No existe — creamos el usuario primero
                 cur.execute(
-                    "INSERT INTO usuario (nombre, apellido) VALUES (%s, %s) RETURNING id_usuario",
-                    (nombre, apellido),
+                    "INSERT INTO usuario (documento, nombre, apellido) VALUES (%s, %s, %s) RETURNING id_usuario",
+                    (documento, nombre, apellido),
                 )
                 id_usuario = cur.fetchone()[0]
 
-            # Insertamos el vector en la tabla rostro_vector
-            # El ::vector convierte el string al tipo vector de pgvector
             cur.execute(
                 "INSERT INTO rostro_vector (id_usuario, vector) VALUES (%s, %s::vector)",
                 (id_usuario, str(vector_lista)),
@@ -120,15 +115,18 @@ def buscar_usuario_por_encoding(encoding_vector, umbral=0.4):
     return id_usuario, f"{nombre} {apellido}", distancia
 
 
-def registrar_acceso(id_usuario, distancia, es_exitoso, captura_path=None):
-    """Inserta un registro en la tabla accesos."""
+def registrar_acceso(id_usuario, distancia, resultado):
+    """
+    Inserta un registro en la tabla accesos.
+    resultado: 'exitoso' | 'sin_permiso' | 'no_reconocido'
+    """
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO accesos (id_usuario, distancia_calculada, es_exitoso, captura_path)
-                VALUES (%s, %s, %s, %s)
+                INSERT INTO accesos (id_usuario, distancia_calculada, resultado)
+                VALUES (%s, %s, %s)
                 """,
-                (id_usuario, distancia, es_exitoso, captura_path),
+                (id_usuario, distancia, resultado),
             )
         conn.commit()

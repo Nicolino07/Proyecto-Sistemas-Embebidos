@@ -30,6 +30,7 @@ class VectorReconocimiento(BaseModel):
     vector: List[float]  # Array de 128 números generado por face_recognition en la Raspberry
 
 class DatosRegistro(BaseModel):
+    documento: str
     nombre: str
     apellido: str
     vector: List[float]  # Array de 128 números del rostro a registrar
@@ -64,8 +65,8 @@ def reconocer(datos: VectorReconocimiento):
     id_usuario, nombre, distancia = buscar_usuario_por_encoding(encoding)
     es_exitoso = nombre != "Desconocido"
 
-    # Guardamos el intento en la tabla accesos (sea exitoso o no)
-    registrar_acceso(id_usuario, distancia, es_exitoso)
+    resultado = "exitoso" if es_exitoso else "no_reconocido"
+    registrar_acceso(id_usuario, distancia, resultado)
 
     return ResultadoReconocimiento(
         nombre=nombre,
@@ -85,7 +86,7 @@ def registrar(datos: DatosRegistro):
     if len(encoding) != 128:
         raise HTTPException(status_code=400, detail="El vector debe tener exactamente 128 valores")
 
-    id_usuario = guardar_usuario(datos.nombre, datos.apellido, encoding)
+    id_usuario = guardar_usuario(datos.documento, datos.nombre, datos.apellido, encoding)
 
     return ResultadoRegistro(
         id_usuario=id_usuario,

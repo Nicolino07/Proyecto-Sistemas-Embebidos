@@ -11,16 +11,37 @@ import face_recognition
 import cv2
 import numpy as np
 import requests
-from config import SERVER_URL, CAMARA_INDEX, FRAMES_A_SALTAR
+from config import SERVER_URL, FRAMES_A_SALTAR
+from detectar_camaras import detectar_camaras
 
-# El índice de la cámara viene de config.py para poder cambiarlo fácilmente
-camera = cv2.VideoCapture(CAMARA_INDEX)
+# Detectar cámaras disponibles y dejar al usuario elegir
+camaras = detectar_camaras()
+
+if not camaras:
+    print("Error: no se encontró ninguna cámara conectada.")
+    exit(1)
+elif len(camaras) == 1:
+    indice = camaras[0]
+    print(f"Usando cámara {indice}.")
+else:
+    print(f"Cámaras disponibles: {camaras}")
+    seleccion = input(f"Elegí el índice de la cámara a usar {camaras}: ")
+    try:
+        indice = int(seleccion)
+        if indice not in camaras:
+            raise ValueError
+    except ValueError:
+        print(f"Índice inválido. Usando cámara {camaras[0]} por defecto.")
+        indice = camaras[0]
+
+camera = cv2.VideoCapture(indice)
 
 # ========================== MODO ==========================
 modo = input("Elegí el modo (1 = registro / 2 = reconocimiento): ")
 
 # ============================================================= MODO 1: REGISTRO =============================================================
 if modo == "1":
+    documento = input("Documento (DNI): ")
     nombre = input("Nombre de la persona: ")
     apellido = input("Apellido de la persona: ")
     print("Mostrando cámara... presioná 's' para capturar el rostro (podés tomar varias fotos!)")
@@ -53,7 +74,7 @@ if modo == "1":
             # .tolist() convierte el numpy array a lista de Python, que es serializable a JSON.
             respuesta = requests.post(
                 f"{SERVER_URL}/registrar",
-                json={"nombre": nombre, "apellido": apellido, "vector": encoding.tolist()},
+                json={"documento": documento, "nombre": nombre, "apellido": apellido, "vector": encoding.tolist()},
             )
 
             if respuesta.status_code == 200:

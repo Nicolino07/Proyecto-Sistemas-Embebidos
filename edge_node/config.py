@@ -5,7 +5,7 @@
 # ==============================================================================
 
 # URL del servidor FastAPI que corre en la PC
-SERVER_URL = "http://localhost:8000"
+SERVER_URL = "http://localhost:8001"
 
 # Índice de la cámara (0 = primera webcam disponible)
 CAMARA_INDEX = 2

@@ -2,5 +2,6 @@ cmake
 opencv-python<4.10
 dlib-bin
 numpy<2
+Pillow
 psycopg2-binary
 requests
