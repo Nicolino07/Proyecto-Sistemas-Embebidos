@@ -1,8 +1,7 @@
 #!/bin/bash
 # =============================================================================
-# Instalador y script de inicio del sistema de reconocimiento facial.
+# Script de inicio del servidor (API + base de datos + cámara local).
 # Uso: bash start.sh
-# Compatible con Linux/Debian y Raspberry Pi OS.
 # =============================================================================
 
 set -e
@@ -17,19 +16,29 @@ warn() { echo -e "${YELLOW}[AVISO]${NC} $1"; }
 fail() { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
 
 echo "================================================"
-echo "  Sistema de Reconocimiento Facial - Instalador"
+echo "  Sistema de Reconocimiento Facial - Servidor"
 echo "================================================"
 echo ""
 
 # -----------------------------------------------------------------------------
-# 1. Verificar Python 3
+# 1. Seleccionar Python
+# Preferimos 3.11 o 3.12 porque tienen wheels precompilados para dlib
+# (sin necesidad de compilar). Con versiones más nuevas se compila desde cero.
 # -----------------------------------------------------------------------------
-echo "Verificando Python 3..."
-if ! command -v python3 &>/dev/null; then
-    fail "Python 3 no encontrado. Instalalo con: sudo apt install python3 python3-venv python3-pip"
+echo "Buscando Python compatible..."
+PYTHON_BIN=""
+for ver in 3.11 3.12 3.10 3.13 3.9; do
+    if command -v "python${ver}" &>/dev/null; then
+        PYTHON_BIN="python${ver}"
+        PYTHON_VERSION="$ver"
+        break
+    fi
+done
+if [ -z "$PYTHON_BIN" ]; then
+    PYTHON_BIN="python3"
+    PYTHON_VERSION=$("$PYTHON_BIN" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
 fi
-PYTHON_VERSION=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
-ok "Python $PYTHON_VERSION encontrado."
+ok "Usando Python $PYTHON_VERSION ($PYTHON_BIN)."
 
 # -----------------------------------------------------------------------------
 # 2. Verificar Docker
@@ -53,35 +62,44 @@ fi
 ok "docker compose disponible."
 
 # -----------------------------------------------------------------------------
-# 4. Instalar dependencias del edge node (solo la primera vez)
+# 4. Instalar dependencias de cámara (solo la primera vez)
 # -----------------------------------------------------------------------------
 if [ ! -d "venv" ]; then
     echo ""
-    echo "Primera vez: instalando dependencias del edge node..."
-    warn "Esto puede tardar varios minutos."
+    echo "Instalando dependencias de cámara (primera vez, puede tardar ~10 min)..."
 
-    python3 -m venv venv \
-        || fail "No se pudo crear el entorno virtual. Instalá python3-venv con: sudo apt install python3-venv"
+    # python-venv
+    if ! "$PYTHON_BIN" -c "import ensurepip" &>/dev/null; then
+        warn "Instalando python${PYTHON_VERSION}-venv..."
+        sudo apt install -y "python${PYTHON_VERSION}-venv" \
+            || fail "No se pudo instalar python${PYTHON_VERSION}-venv."
+    fi
 
-    venv/bin/pip install --upgrade pip -q \
+    # headers de Python (necesarios para compilar dlib si no hay wheel)
+    if ! "$PYTHON_BIN" -c "import sysconfig; open(sysconfig.get_path('include') + '/Python.h')" &>/dev/null; then
+        warn "Instalando python${PYTHON_VERSION}-dev y cmake..."
+        sudo apt install -y "python${PYTHON_VERSION}-dev" cmake build-essential \
+            || fail "No se pudieron instalar las herramientas de compilación."
+    fi
+
+    "$PYTHON_BIN" -m venv venv \
+        || fail "No se pudo crear el entorno virtual."
+
+    venv/bin/pip install --upgrade pip \
         || fail "No se pudo actualizar pip."
 
-    venv/bin/pip install "setuptools<70" -q \
-        || fail "Error instalando setuptools."
+    venv/bin/pip install "setuptools<71" \
+        || fail "No se pudo instalar setuptools."
 
-    venv/bin/pip install -r edge_node/requirements.txt -q \
-        || fail "Error instalando dependencias del edge node (requirements.txt)."
+    echo "Instalando dependencias (esto puede tardar si dlib se compila)..."
+    venv/bin/pip install --no-cache-dir -r edge_node/requirements.txt \
+        || fail "Error instalando dependencias."
 
-    venv/bin/pip install Pillow -q \
-        || fail "Error instalando Pillow."
+    # Verificar que todo quedó instalado
+    venv/bin/python -c "import face_recognition, cv2, numpy, requests" \
+        || fail "La instalación no quedó completa. Revisá los errores de arriba."
 
-    venv/bin/pip install face-recognition --no-deps -q \
-        || fail "Error instalando face-recognition."
-
-    venv/bin/pip install git+https://github.com/ageitgey/face_recognition_models -q \
-        || fail "Error descargando face_recognition_models. Verificá tu conexión a internet."
-
-    ok "Dependencias del edge node instaladas."
+    ok "Dependencias instaladas correctamente."
 else
     ok "Dependencias ya instaladas (venv existente)."
 fi
@@ -116,5 +134,6 @@ echo "================================================"
 ok "Sistema listo."
 echo ""
 echo "  API / Swagger: http://localhost:8000/docs"
-echo "  Cámara:        bash camara.sh"
+echo "  Nodos activos: http://localhost:8000/nodos"
+echo "  Cámara local:  bash camara.sh"
 echo "================================================"

@@ -1,15 +1,18 @@
-# ==============================================================================
-# Configuración del edge node (Raspberry Pi)
-# Cambiar SERVER_URL por la IP real del servidor cuando estén en red local.
-# Ejemplo: SERVER_URL = "http://192.168.1.100:8000"
-# ==============================================================================
+import os
+from pathlib import Path
 
-# URL del servidor FastAPI que corre en la PC
-SERVER_URL = "http://192.168.80.96:8001"
+_env_file = Path(__file__).parent / ".env"
+if _env_file.exists():
+    for _line in _env_file.read_text().splitlines():
+        if "=" in _line and not _line.startswith("#"):
+            _k, _v = _line.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip())
 
-# Índice de la cámara (0 = primera webcam disponible)
-CAMARA_INDEX = 2
+_url = os.environ.get("SERVER_URL", "").strip()
+if not _url:
+    raise RuntimeError("SERVER_URL no configurada. Corré instalar.sh nuevamente.")
+
+SERVER_URL = _url
 
 # Procesar 1 de cada N frames para no sobrecargar la Raspberry.
-# Con 5, si la cámara corre a 15fps, se analiza ~3 rostros por segundo.
 FRAMES_A_SALTAR = 5

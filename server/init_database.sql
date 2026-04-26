@@ -96,6 +96,18 @@ CREATE TABLE accesos (
     resultado           resultado_acceso NOT NULL  
 );
 
+
+-- Nodos edge (Raspberry Pi): se auto-registran al arrancar con su IP actual
+-- hostname es la clave natural; si cambia la IP, se actualiza en el próximo inicio
+CREATE TABLE nodo_edge (
+    id_nodo          SERIAL PRIMARY KEY,
+    hostname         VARCHAR(100) UNIQUE NOT NULL,
+    ip               VARCHAR(45) NOT NULL,
+    ultimo_inicio    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    creado_en        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
 -- Índice HNSW para búsquedas vectoriales rápidas usando distancia coseno
 -- Actúa sobre la tabla rostro_vector, no sobre usuario
 CREATE INDEX ON rostro_vector USING hnsw (vector vector_cosine_ops);

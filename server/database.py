@@ -117,6 +117,51 @@ def buscar_usuario_por_encoding(encoding_vector, umbral=0.4):
     return id_usuario, f"{nombre} {apellido}", distancia
 
 
+def registrar_nodo(hostname, ip):
+    """
+    Registra o actualiza un nodo edge por su hostname.
+    Se llama cada vez que la Raspberry arranca capture.py.
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO nodo_edge (hostname, ip, ultimo_inicio)
+                VALUES (%s, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (hostname) DO UPDATE
+                    SET ip = EXCLUDED.ip,
+                        ultimo_inicio = CURRENT_TIMESTAMP
+                RETURNING id_nodo
+                """,
+                (hostname, ip),
+            )
+            id_nodo = cur.fetchone()[0]
+        conn.commit()
+    return id_nodo
+
+
+def listar_nodos():
+    """
+    Devuelve todos los nodos edge registrados con su última IP conocida.
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id_nodo, hostname, ip, ultimo_inicio, creado_en FROM nodo_edge ORDER BY ultimo_inicio DESC"
+            )
+            rows = cur.fetchall()
+    return [
+        {
+            "id_nodo": r[0],
+            "hostname": r[1],
+            "ip": r[2],
+            "ultimo_inicio": r[3],
+            "creado_en": r[4],
+        }
+        for r in rows
+    ]
+
+
 def registrar_acceso(id_usuario, distancia, resultado):
     """
     Inserta un registro en la tabla accesos.

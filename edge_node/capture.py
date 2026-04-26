@@ -11,8 +11,32 @@ import face_recognition
 import cv2
 import numpy as np
 import requests
+import socket
 from config import SERVER_URL, FRAMES_A_SALTAR
 from detectar_camaras import detectar_camaras
+
+
+def _get_local_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "desconocida"
+
+
+try:
+    requests.post(
+        f"{SERVER_URL}/nodos/registrar",
+        json={"hostname": socket.gethostname(), "ip": _get_local_ip()},
+        timeout=5,
+    )
+    print(f"Nodo registrado en el servidor ({SERVER_URL}).")
+except Exception:
+    print("Advertencia: no se pudo registrar el nodo. El servidor puede no estar disponible.")
+
 
 # Detectar cámaras disponibles y dejar al usuario elegir
 camaras = detectar_camaras()
@@ -142,7 +166,14 @@ elif modo == "2":
         for (top, right, bottom, left), (nombre, es_exitoso, distancia) in ultimo_resultado.items():
             color = (0, 255, 0) if es_exitoso else (0, 0, 255)
             cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
-            label = nombre if es_exitoso else f"Desconocido ({distancia:.2f})" if distancia else "Desconocido"
+            if es_exitoso:
+                label = nombre
+            elif nombre in ("Sin conexion", "Error servidor"):
+                label = nombre
+            elif distancia:
+                label = f"Desconocido ({distancia:.2f})"
+            else:
+                label = "Desconocido"
             cv2.putText(frame, label, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
 
         cv2.imshow("Reconocimiento", frame)

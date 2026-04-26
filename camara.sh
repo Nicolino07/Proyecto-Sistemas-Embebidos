@@ -4,12 +4,17 @@
 # Uso: bash camara.sh
 # =============================================================================
 
-cd "$(dirname "$0")"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-if [ ! -d "venv" ]; then
+if [ ! -d "$SCRIPT_DIR/venv" ]; then
     echo "Primero ejecutá bash start.sh para instalar las dependencias."
     exit 1
 fi
 
-cd edge_node
-../venv/bin/python capture.py
+# En el server la API corre localmente, el .env apunta siempre a localhost
+if [ ! -f "$SCRIPT_DIR/edge_node/.env" ]; then
+    echo "SERVER_URL=http://localhost:8001" > "$SCRIPT_DIR/edge_node/.env"
+fi
+
+cd "$SCRIPT_DIR/edge_node"
+"$SCRIPT_DIR/venv/bin/python" capture.py

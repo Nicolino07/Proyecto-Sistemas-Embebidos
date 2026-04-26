@@ -12,7 +12,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
-from server.database import guardar_usuario, buscar_usuario_por_encoding, registrar_acceso, get_connection
+from server.database import guardar_usuario, buscar_usuario_por_encoding, registrar_acceso, registrar_nodo, listar_nodos, get_connection
 import numpy as np
 
 app = FastAPI(
@@ -43,6 +43,10 @@ class ResultadoReconocimiento(BaseModel):
 class ResultadoRegistro(BaseModel):
     id_usuario: int
     mensaje: str
+
+class RegistroNodo(BaseModel):
+    hostname: str
+    ip: str
 
 
 # ==============================================================================
@@ -123,6 +127,24 @@ def listar_usuarios():
         }
         for row in rows
     ]
+
+
+@app.post("/nodos/registrar")
+def registrar_nodo_endpoint(datos: RegistroNodo):
+    """
+    Llamado por el edge node al arrancar. Registra (o actualiza) su hostname e IP.
+    Permite al servidor saber siempre la IP vigente de cada Raspberry, incluso con DHCP.
+    """
+    id_nodo = registrar_nodo(datos.hostname, datos.ip)
+    return {"id_nodo": id_nodo, "mensaje": f"Nodo '{datos.hostname}' registrado con IP {datos.ip}"}
+
+
+@app.get("/nodos")
+def listar_nodos_endpoint():
+    """
+    Devuelve todos los nodos edge registrados con su última IP conocida y fecha de inicio.
+    """
+    return listar_nodos()
 
 
 @app.delete("/usuarios/{id_usuario}")
