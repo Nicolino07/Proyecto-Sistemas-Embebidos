@@ -7,6 +7,7 @@ sudo apt install -y \
     build-essential \
     cmake \
     pkg-config \
+    python3-dev \
     python3-pip \
     python3-venv \
     libopenblas-dev \
@@ -32,6 +33,10 @@ python3 -m venv venv
 source venv/bin/activate
 
 echo ""
+echo "=== Actualizando pip y herramientas de compilacion ==="
+pip install --upgrade pip setuptools wheel
+
+echo ""
 echo "=== Instalando dependencias base ==="
 pip install "numpy<2" requests
 
@@ -40,8 +45,12 @@ echo "=== Instalando Pillow primero (evita fallos posteriores) ==="
 pip install --no-cache-dir Pillow
 
 echo ""
-echo "=== Compilando dlib (tarda ~20 minutos, no interrumpir) ==="
-pip install dlib==19.24.2
+echo "=== Instalando cmake actualizado (necesario para dlib) ==="
+pip install cmake
+
+echo ""
+echo "=== Compilando dlib con 1 hilo (evita OOM en Raspberry Pi, tarda ~30 minutos) ==="
+MAKEFLAGS="-j1" pip install --no-cache-dir dlib==19.24.2
 
 echo ""
 echo "=== Instalando face_recognition y opencv ==="
@@ -49,10 +58,12 @@ pip install --no-cache-dir face_recognition "opencv-python<4.10"
 
 echo ""
 echo "=== Verificando instalacion ==="
-python <<EQF
+venv/bin/python <<EQF
+import dlib
 import face_recognition
 import cv2
 import requests
+print('dlib version:', dlib.__version__)
 print('Todo instalado correctamente!')
 EQF
 
