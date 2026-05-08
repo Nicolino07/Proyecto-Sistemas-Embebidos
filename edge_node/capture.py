@@ -1,19 +1,22 @@
-# ==============================================================================
-# LIBRERIA requests
-# Permite hacer llamadas HTTP desde Python. Es el equivalente a abrir el navegador
-# y escribir una URL, pero desde código. Acá lo usamos para comunicar la Raspberry
-# con el servidor FastAPI que corre en la PC.
-#
-# requests.post(url, json=datos) → envía datos en formato JSON al servidor
-# respuesta.json()               → convierte la respuesta del servidor a diccionario Python
-# ==============================================================================
-import face_recognition
+from insightface.app import FaceAnalysis
 import cv2
 import numpy as np
 import requests
 import socket
 from config import SERVER_URL, FRAMES_A_SALTAR
 from detectar_camaras import detectar_camaras
+
+_face_app = FaceAnalysis(name='buffalo_sc', providers=['CPUExecutionProvider'])
+_face_app.prepare(ctx_id=0, det_size=(320, 320))
+
+
+def get_faces(frame):
+    faces = _face_app.get(frame)
+    result = []
+    for face in faces:
+        x1, y1, x2, y2 = face.bbox.astype(int)
+        result.append((y1, x2, y2, x1, face.embedding))
+    return result
 
 
 def _get_local_ip():
@@ -38,7 +41,6 @@ except Exception:
     print("Advertencia: no se pudo registrar el nodo. El servidor puede no estar disponible.")
 
 
-# Detectar cámaras disponibles y dejar al usuario elegir
 camaras = detectar_camaras()
 
 if not camaras:
@@ -60,7 +62,6 @@ else:
 
 camera = cv2.VideoCapture(indice)
 
-# ========================== MODO ==========================
 modo = input("Elegí el modo (1 = registro / 2 = reconocimiento): ")
 
 # ============================================================= MODO 1: REGISTRO =============================================================
@@ -76,26 +77,17 @@ if modo == "1":
             print("Error con la cámara")
             break
 
-        # OpenCV usa BGR, face_recognition necesita RGB
-        rgb_frame = np.ascontiguousarray(frame[:, :, ::-1], dtype=np.uint8)
         cv2.imshow("Registro", frame)
         key = cv2.waitKey(1) & 0xFF
 
         if key == ord('s'):
-            face_locations = face_recognition.face_locations(rgb_frame)
-            if len(face_locations) == 0:
+            faces = get_faces(frame)
+            if len(faces) == 0:
                 print("No se detectó un rostro")
                 continue
 
-            face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
-            if len(face_encodings) == 0:
-                print("No se pudo generar encoding")
-                continue
+            _, _, _, _, encoding = faces[0]
 
-            encoding = face_encodings[0]
-
-            # Enviamos el vector al servidor por HTTP en lugar de escribir en la DB directamente.
-            # .tolist() convierte el numpy array a lista de Python, que es serializable a JSON.
             respuesta = requests.post(
                 f"{SERVER_URL}/registrar",
                 json={"documento": documento, "nombre": nombre, "apellido": apellido, "vector": encoding.tolist()},
@@ -107,16 +99,14 @@ if modo == "1":
             else:
                 print(f"Error al registrar: {respuesta.text}")
 
-        elif key == 27:  # ESC para salir
+        elif key == 27:
             break
 
 # ========================================================== MODO 2: RECONOCIMIENTO ==========================================================
 elif modo == "2":
     print("Modo reconocimiento activo. ESC para salir.")
 
-    # Contador de frames para implementar el salto de frames
     frame_count = 0
-    # Guardamos el último resultado para mostrarlo en los frames que salteamos
     ultimo_resultado = {}
 
     while True:
@@ -127,42 +117,31 @@ elif modo == "2":
 
         frame_count += 1
 
-        # Solo procesamos 1 de cada FRAMES_A_SALTAR frames.
-        # En los frames que salteamos, mostramos el último resultado conocido.
-        # Esto hace que el video sea fluido aunque el reconocimiento sea lento.
         if frame_count % FRAMES_A_SALTAR == 0:
-            rgb_frame = np.ascontiguousarray(frame[:, :, ::-1], dtype=np.uint8)
-            face_locations = face_recognition.face_locations(rgb_frame)
+            faces = get_faces(frame)
+            nuevo_resultado = {}
 
-            if len(face_locations) > 0:
-                face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
-                nuevo_resultado = {}
+            for top, right, bottom, left, encoding in faces:
+                try:
+                    respuesta = requests.post(
+                        f"{SERVER_URL}/reconocer",
+                        json={"vector": encoding.tolist()},
+                        timeout=5,
+                    )
+                    if respuesta.status_code == 200:
+                        datos = respuesta.json()
+                        nombre = datos["nombre"]
+                        es_exitoso = datos["es_exitoso"]
+                        distancia = datos.get("distancia")
+                    else:
+                        nombre, es_exitoso, distancia = "Error servidor", False, None
+                except requests.exceptions.ConnectionError:
+                    nombre, es_exitoso, distancia = "Sin conexion", False, None
 
-                for (top, right, bottom, left), encoding in zip(face_locations, face_encodings):
-                    # Enviamos el vector al servidor y recibimos el nombre
-                    try:
-                        respuesta = requests.post(
-                            f"{SERVER_URL}/reconocer",
-                            json={"vector": encoding.tolist()},
-                            timeout=5,  # si el servidor no responde en 5 segs, seguimos
-                        )
-                        if respuesta.status_code == 200:
-                            datos = respuesta.json()
-                            nombre = datos["nombre"]
-                            es_exitoso = datos["es_exitoso"]
-                            distancia = datos.get("distancia")
-                        else:
-                            nombre, es_exitoso, distancia = "Error servidor", False, None
-                    except requests.exceptions.ConnectionError:
-                        nombre, es_exitoso, distancia = "Sin conexion", False, None
+                nuevo_resultado[(top, right, bottom, left)] = (nombre, es_exitoso, distancia)
 
-                    nuevo_resultado[(top, right, bottom, left)] = (nombre, es_exitoso, distancia)
+            ultimo_resultado = nuevo_resultado if faces else {}
 
-                ultimo_resultado = nuevo_resultado
-            else:
-                ultimo_resultado = {}
-
-        # Dibujamos el último resultado conocido sobre el frame actual
         for (top, right, bottom, left), (nombre, es_exitoso, distancia) in ultimo_resultado.items():
             color = (0, 255, 0) if es_exitoso else (0, 0, 255)
             cv2.rectangle(frame, (left, top), (right, bottom), color, 2)

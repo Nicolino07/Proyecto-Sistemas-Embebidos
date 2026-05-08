@@ -4,24 +4,11 @@ set -e
 echo "=== Instalando dependencias del sistema ==="
 sudo apt update
 sudo apt install -y \
-    build-essential \
-    cmake \
-    pkg-config \
     python3-dev \
     python3-pip \
     python3-venv \
-    libopenblas-dev \
-    liblapack-dev \
-    libx11-dev \
-    libgtk-3-dev \
-    libboost-python-dev \
-    libjpeg-dev \
-    zlib1g-dev \
-    libpng-dev \
-    libtiff-dev \
-    libwebp-dev \
-    libatlas-base-dev \
-    gfortran
+    libgl1 \
+    libglib2.0-0
 
 echo ""
 echo "=== Limpiando entorno si existe ==="
@@ -33,33 +20,38 @@ python3 -m venv venv
 source venv/bin/activate
 
 echo ""
-echo "=== Actualizando pip y herramientas de compilacion ==="
+echo "=== Actualizando pip ==="
 pip install --upgrade pip setuptools wheel
 
 echo ""
-echo "=== Instalando dependencias base ==="
-pip install "numpy<2" requests
+echo "=== Instalando dependencias ==="
+pip install --no-cache-dir "numpy<2" requests Pillow "opencv-python<4.10"
 
 echo ""
-echo "=== Instalando Pillow ==="
-pip install --no-cache-dir Pillow
+echo "=== Instalando onnxruntime ==="
+pip install --no-cache-dir onnxruntime
 
 echo ""
-echo "=== Instalando dlib desde piwheels (wheel ARM precompilado) ==="
-pip install --no-cache-dir "dlib<20" --extra-index-url https://www.piwheels.org/simple --only-binary=dlib
+echo "=== Instalando insightface ==="
+pip install --no-cache-dir insightface
 
 echo ""
-echo "=== Instalando face_recognition y opencv ==="
-pip install --no-cache-dir face_recognition "opencv-python<4.10" --extra-index-url https://www.piwheels.org/simple
+echo "=== Descargando modelo de reconocimiento facial (buffalo_sc) ==="
+venv/bin/python -c "
+from insightface.app import FaceAnalysis
+app = FaceAnalysis(name='buffalo_sc', providers=['CPUExecutionProvider'])
+app.prepare(ctx_id=0, det_size=(320, 320))
+print('Modelo descargado correctamente.')
+"
 
 echo ""
 echo "=== Verificando instalacion ==="
 venv/bin/python <<EQF
-import dlib
-import face_recognition
+import insightface
 import cv2
 import requests
-print('dlib version:', dlib.__version__)
+import numpy as np
+print('insightface version:', insightface.__version__)
 print('Todo instalado correctamente!')
 EQF
 

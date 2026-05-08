@@ -1,6 +1,6 @@
 numpy<2
 requests
 Pillow
-dlib<20
-face_recognition
 opencv-python<4.10
+onnxruntime
+insightface
