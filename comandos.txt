@@ -1,1 +1,3 @@
 pip index versions dlib --extra-index-url https://www.piwheels.org/simple
+ERROR: Could not find a version that satisfies the requirement dlib==19.24.2 (from versions: none)
+ERROR: No matching distribution found for dlib==19.24.2
