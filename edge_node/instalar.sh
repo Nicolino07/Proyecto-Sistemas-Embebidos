@@ -46,7 +46,7 @@ pip install --no-cache-dir Pillow
 
 echo ""
 echo "=== Instalando dlib desde piwheels (wheel ARM precompilado) ==="
-pip install --no-cache-dir dlib --extra-index-url https://www.piwheels.org/simple --only-binary=dlib
+pip install --no-cache-dir dlib==19.24.2 --extra-index-url https://www.piwheels.org/simple --only-binary=dlib
 
 echo ""
 echo "=== Instalando face_recognition y opencv ==="
