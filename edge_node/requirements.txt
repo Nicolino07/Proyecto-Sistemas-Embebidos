@@ -1,6 +1,6 @@
 numpy<2
 requests
 Pillow
-dlib==19.24.2
+dlib<20
 face_recognition
 opencv-python<4.10
