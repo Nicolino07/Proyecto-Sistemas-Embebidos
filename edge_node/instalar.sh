@@ -41,7 +41,7 @@ pip install --no-cache-dir Pillow
 
 echo ""
 echo "=== Compilando dlib (tarda ~20 minutos, no interrumpir) ==="
-pip install dlib==20.0.1
+pip install dlib==19.24.2
 
 echo ""
 echo "=== Instalando face_recognition y opencv ==="
