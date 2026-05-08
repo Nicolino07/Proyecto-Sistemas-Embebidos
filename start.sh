@@ -22,8 +22,6 @@ echo ""
 
 # -----------------------------------------------------------------------------
 # 1. Seleccionar Python
-# Preferimos 3.11 o 3.12 porque tienen wheels precompilados para dlib
-# (sin necesidad de compilar). Con versiones más nuevas se compila desde cero.
 # -----------------------------------------------------------------------------
 echo "Buscando Python compatible..."
 PYTHON_BIN=""
@@ -64,9 +62,14 @@ ok "docker compose disponible."
 # -----------------------------------------------------------------------------
 # 4. Instalar dependencias de cámara (solo la primera vez)
 # -----------------------------------------------------------------------------
-if [ ! -d "venv" ]; then
+echo "Instalando dependencias del sistema para cámara..."
+sudo apt install -y libgl1 libglib2.0-0 libgtk-3-0 libgtk2.0-0 \
+    libqt5gui5 libqt5widgets5 libqt5core5a \
+    || warn "No se pudieron instalar algunas dependencias del sistema."
+
+if [ ! -d "venv" ] || ! venv/bin/python -c "import insightface, cv2, numpy, requests" &>/dev/null; then
     echo ""
-    echo "Instalando dependencias de cámara (primera vez, puede tardar ~10 min)..."
+    echo "Instalando dependencias de cámara..."
 
     # python-venv
     if ! "$PYTHON_BIN" -c "import ensurepip" &>/dev/null; then
@@ -75,28 +78,22 @@ if [ ! -d "venv" ]; then
             || fail "No se pudo instalar python${PYTHON_VERSION}-venv."
     fi
 
-    # headers de Python (necesarios para compilar dlib si no hay wheel)
-    if ! "$PYTHON_BIN" -c "import sysconfig; open(sysconfig.get_path('include') + '/Python.h')" &>/dev/null; then
-        warn "Instalando python${PYTHON_VERSION}-dev y cmake..."
-        sudo apt install -y "python${PYTHON_VERSION}-dev" cmake build-essential \
-            || fail "No se pudieron instalar las herramientas de compilación."
-    fi
-
     "$PYTHON_BIN" -m venv venv \
         || fail "No se pudo crear el entorno virtual."
 
     venv/bin/pip install --upgrade pip \
         || fail "No se pudo actualizar pip."
 
-    venv/bin/pip install "setuptools<71" \
-        || fail "No se pudo instalar setuptools."
-
-    echo "Instalando dependencias (esto puede tardar si dlib se compila)..."
+    echo "Instalando dependencias..."
     venv/bin/pip install --no-cache-dir -r edge_node/requirements.txt \
         || fail "Error instalando dependencias."
 
+    echo "Forzando opencv con soporte de display..."
+    venv/bin/pip install --force-reinstall --no-cache-dir "opencv-python" \
+        || fail "Error instalando opencv-python."
+
     # Verificar que todo quedó instalado
-    venv/bin/python -c "import face_recognition, cv2, numpy, requests" \
+    venv/bin/python -c "import insightface, cv2, numpy, requests" \
         || fail "La instalación no quedó completa. Revisá los errores de arriba."
 
     ok "Dependencias instaladas correctamente."

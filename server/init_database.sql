@@ -38,7 +38,7 @@ CREATE TABLE administrador (
 CREATE TABLE rostro_vector (
     id_vector  SERIAL PRIMARY KEY,
     id_usuario INTEGER NOT NULL REFERENCES usuario(id_usuario) ON DELETE CASCADE,
-    vector     vector(128) NOT NULL,
+    vector     vector(512) NOT NULL,
     creado_en  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

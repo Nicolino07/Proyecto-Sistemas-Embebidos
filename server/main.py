@@ -27,13 +27,13 @@ app = FastAPI(
 # ==============================================================================
 
 class VectorReconocimiento(BaseModel):
-    vector: List[float]  # Array de 128 números generado por face_recognition en la Raspberry
+    vector: List[float]  # Array de 512 números generado por insightface en la Raspberry
 
 class DatosRegistro(BaseModel):
     documento: str
     nombre: str
     apellido: str
-    vector: List[float]  # Array de 128 números del rostro a registrar
+    vector: List[float]  # Array de 512 números del rostro a registrar
 
 class ResultadoReconocimiento(BaseModel):
     nombre: str
@@ -63,8 +63,8 @@ def reconocer(datos: VectorReconocimiento):
     """
     encoding = np.array(datos.vector)
 
-    if len(encoding) != 128:
-        raise HTTPException(status_code=400, detail="El vector debe tener exactamente 128 valores")
+    if len(encoding) != 512:
+        raise HTTPException(status_code=400, detail="El vector debe tener exactamente 512 valores")
 
     id_usuario, nombre, distancia = buscar_usuario_por_encoding(encoding)
     es_exitoso = nombre != "Desconocido"
@@ -87,8 +87,8 @@ def registrar(datos: DatosRegistro):
     """
     encoding = np.array(datos.vector)
 
-    if len(encoding) != 128:
-        raise HTTPException(status_code=400, detail="El vector debe tener exactamente 128 valores")
+    if len(encoding) != 512:
+        raise HTTPException(status_code=400, detail="El vector debe tener exactamente 512 valores")
 
     id_usuario = guardar_usuario(datos.documento, datos.nombre, datos.apellido, encoding)
 

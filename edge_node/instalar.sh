@@ -8,7 +8,9 @@ sudo apt install -y \
     python3-pip \
     python3-venv \
     libgl1 \
-    libglib2.0-0
+    libglib2.0-0 \
+    libgtk-3-0 \
+    libgtk2.0-0
 
 echo ""
 echo "=== Limpiando entorno si existe ==="

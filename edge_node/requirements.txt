@@ -1,6 +1,6 @@
 numpy<2
 requests
 Pillow
-opencv-python<4.10
+opencv-python
 onnxruntime
 insightface
