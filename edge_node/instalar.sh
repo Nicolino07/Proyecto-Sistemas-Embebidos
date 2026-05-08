@@ -10,7 +10,6 @@ sudo apt install -y \
     python3-dev \
     python3-pip \
     python3-venv \
-    python3-dlib \
     libopenblas-dev \
     liblapack-dev \
     libx11-dev \
@@ -29,8 +28,8 @@ echo "=== Limpiando entorno si existe ==="
 rm -rf venv
 
 echo ""
-echo "=== Creando entorno virtual (con acceso a dlib del sistema) ==="
-python3 -m venv venv --system-site-packages
+echo "=== Creando entorno virtual ==="
+python3 -m venv venv
 source venv/bin/activate
 
 echo ""
@@ -46,8 +45,12 @@ echo "=== Instalando Pillow ==="
 pip install --no-cache-dir Pillow
 
 echo ""
+echo "=== Instalando dlib desde piwheels (wheel ARM precompilado) ==="
+pip install --no-cache-dir dlib --extra-index-url https://www.piwheels.org/simple --only-binary=dlib
+
+echo ""
 echo "=== Instalando face_recognition y opencv ==="
-pip install --no-cache-dir face_recognition "opencv-python<4.10"
+pip install --no-cache-dir face_recognition "opencv-python<4.10" --extra-index-url https://www.piwheels.org/simple
 
 echo ""
 echo "=== Verificando instalacion ==="
