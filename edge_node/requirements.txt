@@ -1,6 +1,6 @@
 numpy<2
 requests
 Pillow
-dlib==19.24.2
+# dlib se instala via apt: sudo apt install python3-dlib
 face_recognition
 opencv-python<4.10

@@ -10,6 +10,7 @@ sudo apt install -y \
     python3-dev \
     python3-pip \
     python3-venv \
+    python3-dlib \
     libopenblas-dev \
     liblapack-dev \
     libx11-dev \
@@ -24,12 +25,12 @@ sudo apt install -y \
     gfortran
 
 echo ""
-echo " === Limpiando entorno si existe ==="
+echo "=== Limpiando entorno si existe ==="
 rm -rf venv
 
 echo ""
-echo "=== Creando entorno virtual ==="
-python3 -m venv venv
+echo "=== Creando entorno virtual (con acceso a dlib del sistema) ==="
+python3 -m venv venv --system-site-packages
 source venv/bin/activate
 
 echo ""
@@ -41,16 +42,8 @@ echo "=== Instalando dependencias base ==="
 pip install "numpy<2" requests
 
 echo ""
-echo "=== Instalando Pillow primero (evita fallos posteriores) ==="
+echo "=== Instalando Pillow ==="
 pip install --no-cache-dir Pillow
-
-echo ""
-echo "=== Instalando cmake actualizado (necesario para dlib) ==="
-pip install cmake
-
-echo ""
-echo "=== Compilando dlib con 1 hilo (evita OOM en Raspberry Pi, tarda ~30 minutos) ==="
-MAKEFLAGS="-j1" pip install --no-cache-dir dlib==19.24.2
 
 echo ""
 echo "=== Instalando face_recognition y opencv ==="
