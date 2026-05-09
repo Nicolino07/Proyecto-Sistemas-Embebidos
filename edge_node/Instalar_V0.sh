@@ -27,7 +27,7 @@ pip install --upgrade pip setuptools wheel
 
 echo ""
 echo "=== Instalando dependencias ==="
-pip install --no-cache-dir "numpy<2" requests Pillow
+pip install --no-cache-dir "numpy<2" requests Pillow "opencv-python<4.10"
 
 echo ""
 echo "=== Instalando onnxruntime ==="
@@ -36,10 +36,6 @@ pip install --no-cache-dir onnxruntime
 echo ""
 echo "=== Instalando insightface ==="
 pip install --no-cache-dir insightface
-
-echo ""
-echo "=== Instalando opencv con soporte de display (piwheels) ==="
-pip install --force-reinstall --no-cache-dir opencv-python --extra-index-url https://www.piwheels.org/simple
 
 echo ""
 echo "=== Descargando modelo de reconocimiento facial (buffalo_sc) ==="
