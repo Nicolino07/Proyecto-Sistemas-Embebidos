@@ -1,0 +1,23 @@
+SCRIPT_DIR="/home/pame-lujan/Proyecto-Sistemas-Embebidos/edge_node"
+CURRENT_USER="$(whoami)"
+
+sudo bash -c "cat > /etc/systemd/system/edge_node.service" <<EOF
+[Unit]
+Description=Edge Node - Reconocimiento Facial
+After=network.target
+
+[Service]
+Type=simple
+User=${CURRENT_USER}
+WorkingDirectory=${SCRIPT_DIR}
+ExecStart=${SCRIPT_DIR}/venv/bin/python capture.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable edge_node.service
+sudo systemctl start edge_node.service

@@ -1,0 +1,28 @@
+En la raspberry, primero levantar el entorno virtual
+luego cd edge_node
+
+source venv/bin/activate
+python capture.py 
+
+En el server
+dentro del entorno en la raiz de proyecto
+bash start.sh
+
+
+Para conexion del led
+
+comenzando desde la micro sd. 
+1-3-5-7-9-11-13-15-17-19
+2-4-6-8-10-12-14-16-18-20
+
+
+pin 11 (+)
+pin 6 (-)
+
+usar resistencia de 220 ohm maximo probar unas mas chicas para que
+se encienda con mas fuerza el led.
+
+conectar cable positivo en serie con la resistencia en su
+pata positiva (pata larga) la pata negativa (corta) con el
+cable de masa. 
+

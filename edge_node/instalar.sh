@@ -76,5 +76,37 @@ else
 fi
 
 echo ""
-echo "=== Listo! Para correr el sistema: ==="
-echo "    source venv/bin/activate && python capture.py"
+echo "=== Configurando arranque automatico al encender (systemd) ==="
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+CURRENT_USER="$(whoami)"
+SERVICE_FILE="/etc/systemd/system/edge_node.service"
+
+sudo bash -c "cat > ${SERVICE_FILE}" <<EOF
+[Unit]
+Description=Edge Node - Reconocimiento Facial
+After=network.target
+
+[Service]
+Type=simple
+User=${CURRENT_USER}
+WorkingDirectory=${SCRIPT_DIR}
+ExecStart=${SCRIPT_DIR}/venv/bin/python capture.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable edge_node.service
+sudo systemctl start edge_node.service
+echo "Servicio habilitado y corriendo."
+
+echo ""
+echo "=== Listo! El sistema arranca automaticamente al encender. ==="
+echo "Comandos utiles:"
+echo "    sudo systemctl status edge_node   # ver estado"
+echo "    sudo systemctl stop edge_node     # detener"
+echo "    sudo systemctl restart edge_node  # reiniciar"
+echo "    sudo journalctl -u edge_node -f   # ver logs en vivo"
