@@ -79,9 +79,8 @@ echo ""
 echo "=== Configurando arranque automatico al encender (systemd) ==="
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 CURRENT_USER="$(whoami)"
-SERVICE_FILE="/etc/systemd/system/edge_node.service"
 
-sudo bash -c "cat > ${SERVICE_FILE}" <<EOF
+sudo tee /etc/systemd/system/edge_node.service > /dev/null <<EOF
 [Unit]
 Description=Edge Node - Reconocimiento Facial
 After=network.target
