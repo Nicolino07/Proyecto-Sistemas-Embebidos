@@ -19,10 +19,16 @@ comenzando desde la micro sd.
 pin 11 (+)
 pin 6 (-)
 
-usar resistencia de 220 ohm maximo probar unas mas chicas para que
+usar resistencia de 220 ohm maximo
+rojo-rojo-marron
+probar unas mas chicas para que
 se encienda con mas fuerza el led.
 
 conectar cable positivo en serie con la resistencia en su
 pata positiva (pata larga) la pata negativa (corta) con el
 cable de masa. 
 
+sudo systemctl status edge_node    # ver si está corriendo
+sudo systemctl stop edge_node      # detener
+sudo systemctl restart edge_node   # reiniciar
+sudo journalctl -u edge_node -f    # ver logs en vivo
