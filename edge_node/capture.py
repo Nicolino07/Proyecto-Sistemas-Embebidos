@@ -3,7 +3,8 @@ import cv2
 import numpy as np
 import requests
 import socket
-from config import SERVER_URL, FRAMES_A_SALTAR
+from gpiozero import LED
+from config import SERVER_URL, FRAMES_A_SALTAR, LED_GPIO_PIN
 from detectar_camaras import detectar_camaras
 
 _face_app = FaceAnalysis(name='buffalo_sc', providers=['CPUExecutionProvider'])
@@ -106,6 +107,7 @@ if modo == "1":
 elif modo == "2":
     print("Modo reconocimiento activo. ESC para salir.")
 
+    led = LED(LED_GPIO_PIN)
     frame_count = 0
     ultimo_resultado = {}
 
@@ -142,6 +144,11 @@ elif modo == "2":
 
             ultimo_resultado = nuevo_resultado if faces else {}
 
+            if any(es_exitoso for _, es_exitoso, _ in ultimo_resultado.values()):
+                led.on()
+            else:
+                led.off()
+
         for (top, right, bottom, left), (nombre, es_exitoso, distancia) in ultimo_resultado.items():
             color = (0, 255, 0) if es_exitoso else (0, 0, 255)
             cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
@@ -159,6 +166,8 @@ elif modo == "2":
 
         if cv2.waitKey(1) & 0xFF == 27:
             break
+
+    led.off()
 
 camera.release()
 cv2.destroyAllWindows()

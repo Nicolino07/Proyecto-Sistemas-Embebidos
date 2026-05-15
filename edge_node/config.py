@@ -16,3 +16,6 @@ SERVER_URL = _url
 
 # Procesar 1 de cada N frames para no sobrecargar la Raspberry.
 FRAMES_A_SALTAR = 5
+
+# Pin BCM del LED que se enciende al reconocer una cara (ej: GPIO 17 = pin físico 11).
+LED_GPIO_PIN = 17

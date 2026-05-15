@@ -42,6 +42,10 @@ echo "=== Instalando opencv con soporte de display (piwheels) ==="
 pip install --force-reinstall --no-cache-dir opencv-python --extra-index-url https://www.piwheels.org/simple
 
 echo ""
+echo "=== Instalando gpiozero (control de GPIO / LED) ==="
+pip install --no-cache-dir gpiozero
+
+echo ""
 echo "=== Descargando modelo de reconocimiento facial (buffalo_sc) ==="
 venv/bin/python -c "
 from insightface.app import FaceAnalysis
