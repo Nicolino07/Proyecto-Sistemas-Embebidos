@@ -162,18 +162,76 @@ def listar_nodos():
     ]
 
 
-def registrar_acceso(id_usuario, distancia, resultado):
+# ==============================================================================
+# COOLDOWN DE ACCESOS
+#
+# La Raspberry procesa cada frame de video como un intento de reconocimiento,
+# lo que genera múltiples registros por segundo para la misma persona.
+# Para evitar inundar la tabla accesos con entradas duplicadas, se aplica un
+# período de espera mínimo entre registros del mismo usuario en el mismo punto.
+#
+# Valores por resultado:
+#   - exitoso / sin_permiso: COOLDOWN_RECONOCIDO_SEG segundos
+#     Representa un evento real (persona identificada). Se guarda una sola vez
+#     por intervalo para que el historial sea legible y útil para auditoría.
+#
+#   - no_reconocido: COOLDOWN_DESCONOCIDO_SEG segundos
+#     Puede ser ruido de cámara o una persona desconocida real. Se registra
+#     con menos frecuencia para no saturar la tabla, pero con un intervalo
+#     más corto para no perder intentos de intrusión.
+# ==============================================================================
+COOLDOWN_RECONOCIDO_SEG = 30   # segundos entre registros para usuario identificado
+COOLDOWN_DESCONOCIDO_SEG = 10  # segundos entre registros para rostro no reconocido
+
+
+def registrar_acceso(id_usuario, distancia, resultado, id_punto_acceso=None):
     """
-    Inserta un registro en la tabla accesos.
-    resultado: 'exitoso' | 'sin_permiso' | 'no_reconocido'
+    Inserta un registro en la tabla accesos aplicando cooldown para evitar
+    entradas duplicadas cuando la Raspberry detecta la misma cara en frames
+    consecutivos.
+
+    Parámetros:
+        id_usuario       -- ID del usuario reconocido, o None si es desconocido.
+        distancia        -- Distancia coseno calculada por pgvector (0.0 = idéntico).
+        resultado        -- 'exitoso' | 'sin_permiso' | 'no_reconocido'
+        id_punto_acceso  -- ID del punto de acceso (Raspberry). None si no está asignado.
+
+    Retorna True si el acceso fue registrado, False si fue ignorado por cooldown.
     """
+    cooldown = (
+        COOLDOWN_RECONOCIDO_SEG
+        if resultado in ("exitoso", "sin_permiso")
+        else COOLDOWN_DESCONOCIDO_SEG
+    )
+
     with get_connection() as conn:
         with conn.cursor() as cur:
+            # Busca si ya existe un acceso reciente del mismo usuario en el mismo punto.
+            # Para usuarios desconocidos (id_usuario IS NULL) agrupa todos los
+            # "no_reconocido" del mismo punto de acceso como si fueran uno solo.
             cur.execute(
                 """
-                INSERT INTO accesos (id_usuario, distancia_calculada, resultado)
-                VALUES (%s, %s, %s)
+                SELECT id_acceso FROM accesos
+                WHERE resultado = %s
+                  AND (id_usuario = %s OR (id_usuario IS NULL AND %s IS NULL))
+                  AND (id_punto_acceso = %s OR (id_punto_acceso IS NULL AND %s IS NULL))
+                  AND fecha_hora >= NOW() - INTERVAL '1 second' * %s
+                LIMIT 1
                 """,
-                (id_usuario, distancia, resultado),
+                (resultado, id_usuario, id_usuario,
+                 id_punto_acceso, id_punto_acceso,
+                 cooldown),
+            )
+            if cur.fetchone() is not None:
+                # Acceso reciente encontrado: descartamos este frame para no duplicar.
+                return False
+
+            cur.execute(
+                """
+                INSERT INTO accesos (id_usuario, id_punto_acceso, distancia_calculada, resultado)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (id_usuario, id_punto_acceso, distancia, resultado),
             )
         conn.commit()
+    return True

@@ -24,7 +24,8 @@ CREATE TABLE usuario (
 CREATE TABLE administrador (
     id_admin    SERIAL PRIMARY KEY,
     username    VARCHAR(100) UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,        -- hash bcrypt o argon2, nunca texto plano
+    password_hash TEXT NOT NULL,        -- hash bcrypt, nunca texto plano
+    recovery_code_hash TEXT,            -- hash bcrypt del código de recuperación (generado al crear)
     nombre      VARCHAR(100),
     apellido    VARCHAR(100),
     email       VARCHAR(255) UNIQUE,
@@ -50,12 +51,24 @@ CREATE TABLE zona (
     creado_en   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Nodos edge (Raspberry Pi): se auto-registran al arrancar con su IP actual
+-- hostname es la clave natural; si cambia la IP, se actualiza en el próximo inicio
+CREATE TABLE nodo_edge (
+    id_nodo          SERIAL PRIMARY KEY,
+    hostname         VARCHAR(100) UNIQUE NOT NULL,
+    ip               VARCHAR(45) NOT NULL,
+    ultimo_inicio    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    creado_en        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Punto de acceso pertenece a una zona
+-- id_nodo referencia la Raspberry Pi que cubre este punto físico
 CREATE TABLE punto_acceso (
     id_punto    SERIAL PRIMARY KEY,
     nombre      VARCHAR(100) NOT NULL,
     ubicacion   VARCHAR(255),
     id_zona     INTEGER NOT NULL REFERENCES zona(id_zona) ON DELETE RESTRICT,
+    id_nodo     INTEGER REFERENCES nodo_edge(id_nodo) ON DELETE SET NULL,
     habilitado  BOOLEAN DEFAULT TRUE,
     creado_en   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -94,17 +107,6 @@ CREATE TABLE accesos (
     fecha_hora          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     distancia_calculada FLOAT,
     resultado           resultado_acceso NOT NULL  
-);
-
-
--- Nodos edge (Raspberry Pi): se auto-registran al arrancar con su IP actual
--- hostname es la clave natural; si cambia la IP, se actualiza en el próximo inicio
-CREATE TABLE nodo_edge (
-    id_nodo          SERIAL PRIMARY KEY,
-    hostname         VARCHAR(100) UNIQUE NOT NULL,
-    ip               VARCHAR(45) NOT NULL,
-    ultimo_inicio    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    creado_en        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 

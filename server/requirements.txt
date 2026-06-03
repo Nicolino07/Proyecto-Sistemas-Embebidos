@@ -3,3 +3,9 @@ pgvector
 fastapi
 uvicorn
 python-dotenv
+python-jose[cryptography]
+bcrypt
+python-multipart
+insightface
+onnxruntime
+opencv-python-headless

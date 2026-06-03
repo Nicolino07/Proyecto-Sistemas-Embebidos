@@ -1,0 +1,154 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 400px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 0.85rem;
+  color: #a6adc8;
+}
+
+.field input {
+  background: #313244;
+  border: 1px solid #45475a;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #cdd6f4;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.field input:focus {
+  border-color: #cba6f7;
+}
+
+.camaraWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  max-width: 660px;
+}
+
+.instruccion {
+  color: #a6adc8;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.videoContainer {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid #45475a;
+}
+
+.video {
+  display: block;
+  width: 640px;
+  max-width: 100%;
+  height: auto;
+  background: #000;
+}
+
+.progreso {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+}
+
+.punto {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #45475a;
+  transition: background 0.2s;
+}
+
+.puntoOk {
+  background: #a6e3a1;
+}
+
+.contador {
+  color: #6c7086;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.acciones {
+  display: flex;
+  gap: 12px;
+}
+
+.btnPrimary {
+  background: #cba6f7;
+  color: #1e1e2e;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btnPrimary:hover { opacity: 0.85; }
+.btnPrimary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btnSecondary {
+  background: none;
+  border: 1px solid #45475a;
+  color: #cdd6f4;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnSecondary:hover { background: #313244; }
+
+.listo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: 400px;
+}
+
+.checkmark {
+  width: 56px;
+  height: 56px;
+  background: #a6e3a1;
+  color: #1e1e2e;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.listo h3 {
+  color: #cdd6f4;
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.listo p {
+  color: #a6adc8;
+  margin: 0;
+  font-size: 0.9rem;
+}

@@ -1,0 +1,86 @@
+.pageTitle {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #cdd6f4;
+  margin: 0 0 24px 0;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.pageHeader .pageTitle {
+  margin: 0;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.table th {
+  text-align: left;
+  padding: 10px 12px;
+  color: #6c7086;
+  font-weight: 600;
+  border-bottom: 1px solid #313244;
+}
+
+.table td {
+  padding: 12px 12px;
+  border-bottom: 1px solid #313244;
+  color: #cdd6f4;
+}
+
+.table tr:hover td {
+  background: #26273a;
+}
+
+.muted {
+  color: #6c7086;
+}
+
+.error {
+  color: #f38ba8;
+  font-size: 0.9rem;
+}
+
+.badge {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.mono {
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+.btnDanger {
+  background: none;
+  border: 1px solid #f38ba8;
+  color: #f38ba8;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: background 0.15s;
+}
+
+.btnDanger:hover {
+  background: rgba(243, 139, 168, 0.1);
+}
+
+.select {
+  background: #313244;
+  border: 1px solid #45475a;
+  color: #cdd6f4;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  outline: none;
+}
