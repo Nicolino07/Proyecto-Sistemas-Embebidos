@@ -19,5 +19,6 @@ app = FaceAnalysis(name='buffalo_sc', providers=['CPUExecutionProvider']); \
 app.prepare(ctx_id=0, det_size=(320, 320))"
 
 COPY server/ ./server
+COPY frontend/dist/ ./frontend/dist/
 
 CMD ["uvicorn", "server.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
