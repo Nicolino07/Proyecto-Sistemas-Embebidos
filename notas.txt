@@ -32,3 +32,10 @@ sudo systemctl status edge_node    # ver si está corriendo
 sudo systemctl stop edge_node      # detener
 sudo systemctl restart edge_node   # reiniciar
 sudo journalctl -u edge_node -f    # ver logs en vivo
+
+
+
+cd ~/Proyecto-Sistemas-Embebidos/edge_node
+source venv/bin/activate
+python -c "import cv2; cap=cv2.VideoCapture(0); print('0:', cap.isOpened(), cap.read()[0]); cap.release()"
+python -c "import cv2; cap=cv2.VideoCapture(1); print('1:', cap.isOpened(), cap.read()[0]); cap.release()"
