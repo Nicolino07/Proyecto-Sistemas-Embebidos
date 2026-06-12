@@ -1,11 +1,16 @@
 from insightface.app import FaceAnalysis
 import cv2
 import numpy as np
+import os
 import requests
 import socket
+import sys
 from gpiozero import LED
 from config import SERVER_URL, FRAMES_A_SALTAR, LED_GPIO_PIN
 from detectar_camaras import detectar_camaras
+
+# Detectar si corremos en modo servicio (sin terminal/display)
+HEADLESS = not sys.stdin.isatty() or os.environ.get("DISPLAY") is None
 
 _face_app = FaceAnalysis(name='buffalo_sc', providers=['CPUExecutionProvider'])
 _face_app.prepare(ctx_id=0, det_size=(320, 320))
@@ -52,7 +57,7 @@ camaras = detectar_camaras()
 if not camaras:
     print("Error: no se encontró ninguna cámara conectada.")
     exit(1)
-elif len(camaras) == 1:
+elif len(camaras) == 1 or HEADLESS:
     indice = camaras[0]
     print(f"Usando cámara {indice}.")
 else:
@@ -125,11 +130,12 @@ while True:
             label = "Desconocido"
         cv2.putText(frame, label, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
 
-    cv2.imshow("Reconocimiento", frame)
-
-    if cv2.waitKey(1) & 0xFF == 27:
-        break
+    if not HEADLESS:
+        cv2.imshow("Reconocimiento", frame)
+        if cv2.waitKey(1) & 0xFF == 27:
+            break
 
 led.off()
 camera.release()
-cv2.destroyAllWindows()
+if not HEADLESS:
+    cv2.destroyAllWindows()
