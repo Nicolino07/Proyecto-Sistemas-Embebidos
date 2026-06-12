@@ -8,14 +8,22 @@ param(
 )
 
 $ErrorActionPreference = "SilentlyContinue"
-$TASK_NAME = "SisRecFacial_API"
 
-Write-Host "Deteniendo contenedores Docker..."
-Set-Location $AppDir
-& docker compose down 2>&1 | Out-Null
+$PG_SVC   = "SisRecFacial_DB"
+$API_SVC  = "SisRecFacial_API"
+$PGBIN    = "$AppDir\pgsql\bin"
 
-Write-Host "Eliminando tarea programada..."
-Stop-ScheduledTask -TaskName $TASK_NAME -ErrorAction SilentlyContinue
-Unregister-ScheduledTask -TaskName $TASK_NAME -Confirm:$false -ErrorAction SilentlyContinue
+Write-Host "Deteniendo servidor API..."
+Stop-ScheduledTask -TaskName $API_SVC -ErrorAction SilentlyContinue
+Unregister-ScheduledTask -TaskName $API_SVC -Confirm:$false -ErrorAction SilentlyContinue
+Start-Sleep -Seconds 2
+
+Write-Host "Deteniendo base de datos..."
+Stop-Service -Name $PG_SVC -Force -ErrorAction SilentlyContinue
+Start-Sleep -Seconds 2
+
+if (Test-Path "$PGBIN\pg_ctl.exe") {
+    & "$PGBIN\pg_ctl.exe" unregister -N $PG_SVC 2>&1 | Out-Null
+}
 
 Write-Host "Limpieza completada."

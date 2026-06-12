@@ -15,7 +15,7 @@ Unicode True
 !define TASK_NAME   "SisRecFacial_API"
 
 Name "${APP_NAME}"
-OutFile "Output\SistemaReconocimientoFacial_Instalador_v3.exe"
+OutFile "Output\SistemaReconocimientoFacial_Instalador_v4.exe"
 InstallDir "$PROGRAMFILES64\SistemaReconocimientoFacial"
 InstallDirRegKey HKLM "Software\${APP_NAME}" "InstallDir"
 RequestExecutionLevel admin
@@ -23,9 +23,9 @@ RequestExecutionLevel admin
 ; ─── Aspecto moderno ──────────────────────────────────────────────────────────
 !define MUI_ABORTWARNING
 !define MUI_WELCOMEPAGE_TITLE  "Bienvenido al instalador"
-!define MUI_WELCOMEPAGE_TEXT   "Este asistente instalará el ${APP_NAME} en tu computadora.$\r$\n$\r$\nRequiere Docker Desktop y conexión a internet. Si Docker no está instalado, se descargará e instalará automáticamente (requiere reinicio).$\r$\n$\r$\nCerrá todas las aplicaciones antes de continuar."
+!define MUI_WELCOMEPAGE_TEXT   "Este asistente instalará el ${APP_NAME} en tu computadora.$\r$\n$\r$\nEl proceso descarga Python, PostgreSQL y las dependencias necesarias. Requiere conexión a internet y puede tardar 20-40 minutos.$\r$\n$\r$\nCerrá todas las aplicaciones antes de continuar."
 !define MUI_FINISHPAGE_TITLE   "Instalación completada"
-!define MUI_FINISHPAGE_TEXT    "El sistema está listo.$\r$\n$\r$\nEl servidor arranca automáticamente con Windows.$\r$\nEl panel de administración estará disponible en:$\r$\nhttp://localhost:8001"
+!define MUI_FINISHPAGE_TEXT    "El sistema está listo.$\r$\n$\r$\nEl servidor arranca automáticamente con Windows.$\r$\nEl panel de administración estará disponible en:$\r$\nhttp://localhost:8000"
 !define MUI_FINISHPAGE_RUN     "$INSTDIR\abrir_panel.bat"
 !define MUI_FINISHPAGE_RUN_TEXT "Abrir el Panel de Administración"
 
@@ -57,14 +57,13 @@ Section "Principal" SecMain
   ; ── Archivos raíz ─────────────────────────────────────────────────────────
   SetOutPath "$INSTDIR"
   File "..\server\init_database.sql"
-  File "..\docker-compose.yml"
   File "scripts\install.ps1"
   File "scripts\uninstall.ps1"
 
   ; ── Script principal de instalación ───────────────────────────────────────
   DetailPrint "Instalando dependencias del sistema..."
-  DetailPrint "(Docker Desktop, imagen del servidor, modelo de IA)"
-  DetailPrint "Esto puede tardar entre 10 y 20 minutos segun tu conexion a internet."
+  DetailPrint "(Python, PostgreSQL, pgvector, modelos de IA)"
+  DetailPrint "Esto puede tardar entre 20 y 40 minutos segun tu conexion a internet."
   DetailPrint "No cierres esta ventana."
 
   nsExec::ExecToLog 'powershell.exe -ExecutionPolicy Bypass -NonInteractive \
@@ -114,6 +113,10 @@ Section "Uninstall"
   nsExec::ExecToLog 'powershell.exe -ExecutionPolicy Bypass -NonInteractive \
     -File "$INSTDIR\uninstall.ps1" -AppDir "$INSTDIR"'
 
+  ; Borrar archivos (venv y pgsql son grandes, borrar explícitamente)
+  RMDir /r "$INSTDIR\venv"
+  RMDir /r "$INSTDIR\pgsql"
+  RMDir /r "$INSTDIR\pgsql_data"
   RMDir /r "$INSTDIR\server"
   RMDir /r "$INSTDIR\frontend"
   Delete "$INSTDIR\*.*"
